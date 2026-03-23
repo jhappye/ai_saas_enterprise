@@ -131,6 +131,8 @@ cp frontend/.env.example frontend/.env
 - `backend/.env`
 - `frontend/.env`
 
+其中前端的 `NEXT_PUBLIC_API_BASE_URL` 在通过 Nginx 反向代理部署时建议保持为 `/api/v1`，避免浏览器错误地请求访问者本机的 `localhost:8000`。
+
 至少需要填写：
 - Stripe 密钥
 - Dify API Key
