@@ -46,8 +46,8 @@
 ## 3. 前端完整代码（Next.js 项目）
 
 - 官网：`/`、`/pricing`、`/signin`、`/signup`
-- 用户端：`/app`
-- 管理后台：`/admin`
+- 用户端：`/app`（已接通登录态、用量读取与 AI 问答）
+- 管理后台：`/admin`（已接通真实后台指标接口）
 - 技术栈：Next.js App Router + Tailwind CSS + Axios + Recharts。
 
 ## 4. 数据库建表 SQL
@@ -160,8 +160,8 @@ docker compose up --build -d
 
 ### 8.5 注册到购买的完整业务链路
 
-1. 用户在官网注册企业账号。
-2. 后端创建 `tenant` 和 `owner user`。
+1. 用户在官网注册企业账号，前端会真实调用 `/api/v1/auth/signup` 并保存 JWT。
+2. 后端创建 `tenant` 和 `owner user`，随后 `/api/v1/auth/me`、`/api/v1/billing/usage`、`/api/v1/admin/dashboard` 可为控制台提供真实数据。
 3. 用户在定价页或控制台选择套餐。
 4. 后端创建 Stripe Checkout Session。
 5. Stripe Webhook 回调成功后自动激活订阅。

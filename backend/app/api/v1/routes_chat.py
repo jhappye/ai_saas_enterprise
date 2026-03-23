@@ -19,6 +19,6 @@ async def chat(payload: ChatRequest, user=Depends(get_current_user), db: Session
     allowed = cache.rate_limit(f"rate_limit:{user.tenant_id}:{user.id}", settings.default_rate_limit_per_minute)
     if not allowed:
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded")
-    request_id = UsageService(db).log_chat(user.tenant_id, user.id)
     result = await DifyService().chat(user.tenant_id, user.tenant.dify_dataset_id, payload.query, payload.conversation_id)
+    request_id = UsageService(db).log_chat(user.tenant_id, user.id, status=result["source"], metadata={"query": payload.query, "source": result["source"]})
     return ChatResponse(**result, conversation_id=result.get("conversation_id") or request_id)

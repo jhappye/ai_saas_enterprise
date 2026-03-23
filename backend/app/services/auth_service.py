@@ -13,6 +13,8 @@ class AuthService:
     def signup(self, payload: SignupRequest):
         if self.repo.get_by_email(payload.email):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
+        if self.repo.get_tenant_by_slug(payload.company_slug):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Company slug already exists")
         user = self.repo.create_tenant_and_owner(
             company_name=payload.company_name,
             company_slug=payload.company_slug,
@@ -20,10 +22,12 @@ class AuthService:
             email=payload.email,
             password_hash=hash_password(payload.password),
         )
-        return create_access_token(str(user.id))
+        return {"access_token": create_access_token(str(user.id)), "user": user}
 
     def login(self, payload: LoginRequest):
         user = self.repo.get_by_email(payload.email)
         if not user or not verify_password(payload.password, user.password_hash):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-        return create_access_token(str(user.id))
+        if not user.is_active:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is inactive")
+        return {"access_token": create_access_token(str(user.id)), "user": user}
