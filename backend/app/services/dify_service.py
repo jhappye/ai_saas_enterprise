@@ -1,4 +1,5 @@
 import json
+
 import httpx
 from loguru import logger
 
@@ -18,6 +19,7 @@ class DifyService:
             data = json.loads(cached)
             data["source"] = "cache"
             return data
+
         headers = {"Authorization": f"Bearer {settings.dify_api_key}", "Content-Type": "application/json"}
         payload = {
             "inputs": {"tenant_id": tenant_id, "dataset_id": dataset_id},
@@ -26,6 +28,7 @@ class DifyService:
             "conversation_id": conversation_id,
             "user": str(tenant_id),
         }
+
         try:
             async with httpx.AsyncClient(timeout=settings.dify_timeout_seconds) as client:
                 response = await client.post(f"{settings.dify_base_url}/chat-messages", headers=headers, json=payload)
@@ -38,6 +41,13 @@ class DifyService:
                 }
                 self.cache.set_ai_cache(tenant_id, query, result)
                 return result
+        except httpx.HTTPStatusError as exc:
+            logger.warning("Dify returned status {} for tenant {}: {}", exc.response.status_code, tenant_id, exc.response.text)
         except Exception as exc:
             logger.exception("Dify chat failed: {}", exc)
-            return {"answer": settings.fallback_answer, "conversation_id": conversation_id, "source": "fallback"}
+
+        return {
+            "answer": settings.fallback_answer,
+            "conversation_id": conversation_id,
+            "source": "fallback",
+        }
