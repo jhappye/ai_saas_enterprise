@@ -10,6 +10,8 @@ class TenantSummary(BaseModel):
     plan: str
     status: str
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class UserSummary(BaseModel):
     id: int
