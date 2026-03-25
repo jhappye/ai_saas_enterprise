@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy import func, select
 
 from app.models.models import KnowledgeDocument, Order, Subscription, UsageLog, User
@@ -37,12 +39,28 @@ class BillingRepository(BaseRepository):
         total_chats = self.db.scalar(select(func.count()).select_from(UsageLog).where(UsageLog.tenant_id == tenant_id, UsageLog.feature == "chat"))
         revenue = self.db.scalar(select(func.coalesce(func.sum(Order.amount), 0)).where(Order.tenant_id == tenant_id, Order.status.in_(["paid", "active", "pending"])))
         subscription = self.db.scalar(select(Subscription).where(Subscription.tenant_id == tenant_id))
+
+        response_samples = self.db.scalars(select(UsageLog.metadata_json).where(UsageLog.tenant_id == tenant_id, UsageLog.feature == "chat")).all()
+        response_times = []
+        for metadata in response_samples:
+            if not metadata:
+                continue
+            try:
+                parsed = json.loads(metadata)
+                value = parsed.get("response_ms")
+                if isinstance(value, int):
+                    response_times.append(value)
+            except Exception:
+                continue
+
+        avg_response_ms = int(sum(response_times) / len(response_times)) if response_times else 0
+
         return {
             "total_users": int(total_users or 0),
             "total_orders": int(total_orders or 0),
             "total_revenue": float(revenue or 0),
             "total_documents": int(total_documents or 0),
             "total_chats": int(total_chats or 0),
-            "avg_response_ms": 0,
+            "avg_response_ms": avg_response_ms,
             "active_subscription": subscription.plan_code if subscription and subscription.status == "active" else None,
         }

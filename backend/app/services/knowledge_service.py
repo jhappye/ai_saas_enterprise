@@ -1,3 +1,4 @@
+import re
 import uuid
 from pathlib import Path
 
@@ -21,6 +22,11 @@ class KnowledgeService:
         if not file.filename:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File is required")
 
+        ext = Path(file.filename).suffix.lower().lstrip(".")
+        allowed_exts = {item.strip().lower() for item in settings.allowed_upload_extensions.split(",") if item.strip()}
+        if ext not in allowed_exts:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported file type: .{ext}")
+
         content = await file.read()
         size_limit = settings.max_upload_size_mb * 1024 * 1024
         if len(content) > size_limit:
@@ -28,7 +34,9 @@ class KnowledgeService:
 
         tenant_dir = Path(settings.uploads_dir) / str(tenant_id)
         tenant_dir.mkdir(parents=True, exist_ok=True)
-        target_name = f"{uuid.uuid4()}_{file.filename}"
+
+        safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", file.filename)
+        target_name = f"{uuid.uuid4()}_{safe_name}"
         target_path = tenant_dir / target_name
         target_path.write_bytes(content)
 
@@ -41,7 +49,7 @@ class KnowledgeService:
                     response = await client.post(
                         f"{settings.dify_base_url}/datasets/{dataset_id}/document/create-by-file",
                         headers={"Authorization": f"Bearer {settings.dify_api_key}"},
-                        files={"file": (file.filename, content, file.content_type or "application/octet-stream")},
+                        files={"file": (safe_name, content, file.content_type or "application/octet-stream")},
                         data={"indexing_technique": "high_quality", "process_rule": "automatic"},
                     )
                     response.raise_for_status()
@@ -55,7 +63,7 @@ class KnowledgeService:
         document = self.repo.create_document(
             tenant_id=tenant_id,
             user_id=user_id,
-            filename=file.filename,
+            filename=safe_name,
             file_size=len(content),
             content_type=file.content_type,
             storage_path=str(target_path),

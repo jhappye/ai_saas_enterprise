@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ai_saas
       POSTGRES_USER: postgres
@@ -16,6 +17,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data:/data
@@ -27,6 +29,7 @@ services:
 
   backend:
     build: ./backend
+    restart: unless-stopped
     env_file:
       - ./backend/.env.example
     volumes:
@@ -37,12 +40,13 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready')"]
       interval: 15s
       timeout: 5s
       retries: 5
 
   frontend:
+    restart: unless-stopped
     build:
       context: ./frontend
       args:
@@ -55,6 +59,7 @@ services:
 
   nginx:
     image: nginx:1.27-alpine
+    restart: unless-stopped
     ports:
       - '80:80'
     volumes:

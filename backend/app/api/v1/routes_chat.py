@@ -1,3 +1,5 @@
+from time import perf_counter
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -20,12 +22,16 @@ async def chat(payload: ChatRequest, user=Depends(get_current_user), db: Session
     if not allowed:
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded")
 
+    start = perf_counter()
     result = await DifyService().chat(user.tenant_id, user.tenant.dify_dataset_id, payload.query, payload.conversation_id)
+    response_ms = int((perf_counter() - start) * 1000)
+
     request_id = UsageService(db).log_chat(
         user.tenant_id,
         user.id,
         status=result["source"],
         metadata={"query": payload.query, "source": result["source"]},
+        response_ms=response_ms,
     )
     result["conversation_id"] = result.get("conversation_id") or request_id
     return ChatResponse(**result)

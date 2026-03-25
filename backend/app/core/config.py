@@ -1,4 +1,6 @@
 from functools import lru_cache
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,8 +26,16 @@ class Settings(BaseSettings):
     default_rate_limit_per_minute: int = 60
     uploads_dir: str = "/app/uploads"
     max_upload_size_mb: int = 50
+    allowed_upload_extensions: str = "pdf,doc,docx,xls,xlsx,md,txt,csv,ppt,pptx"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    @field_validator("max_upload_size_mb")
+    @classmethod
+    def validate_upload_size(cls, value: int) -> int:
+        if value < 1 or value > 200:
+            raise ValueError("MAX_UPLOAD_SIZE_MB must be between 1 and 200")
+        return value
 
 
 @lru_cache

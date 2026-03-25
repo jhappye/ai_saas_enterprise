@@ -11,15 +11,27 @@ class UsageService:
         self.db = db
         self.repo = BillingRepository(db)
 
-    def log_chat(self, tenant_id: int, user_id: int, status: str = "success", metadata: dict | None = None) -> str:
+    def log_chat(
+        self,
+        tenant_id: int,
+        user_id: int,
+        status: str = "success",
+        metadata: dict | None = None,
+        response_ms: int | None = None,
+    ) -> str:
         request_id = str(uuid.uuid4())
+        payload = metadata or {}
+        if response_ms is not None:
+            payload["response_ms"] = response_ms
+
         self.db.add(
             UsageLog(
                 tenant_id=tenant_id,
                 user_id=user_id,
                 request_id=request_id,
+                feature="chat",
                 status=status,
-                metadata_json=json.dumps(metadata or {}),
+                metadata_json=json.dumps(payload),
             )
         )
         self.db.commit()

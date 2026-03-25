@@ -91,7 +91,7 @@ stripe listen --forward-to localhost:8000/api/v1/billing/webhook
 
 位置：
 - `backend/app/services/dify_service.py`
-- `backend/app/api/v1/routes_knowledge.py`（多租户文档上传/列表/删除）
+- `backend/app/api/v1/routes_knowledge.py`（多租户文档上传/列表/删除，管理员权限控制）
 
 实现内容：
 - 多租户透传 `tenant_id`
@@ -105,6 +105,7 @@ stripe listen --forward-to localhost:8000/api/v1/billing/webhook
 - `DIFY_API_KEY`
 - `DIFY_TIMEOUT_SECONDS`
 - `FALLBACK_ANSWER`
+- `UPLOADS_DIR` / `MAX_UPLOAD_SIZE_MB` / `ALLOWED_UPLOAD_EXTENSIONS`
 
 ## 7. Docker 部署文件
 
@@ -150,6 +151,7 @@ docker compose up --build -d
 启动后访问：
 - 官网：`http://localhost`
 - API 健康检查：`http://localhost/health`
+- API 就绪检查：`http://localhost/health/ready`
 - API 文档：`http://localhost:8000/docs`
 
 ### 8.4 生产部署建议
