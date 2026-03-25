@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     dify_timeout_seconds: int = 30
     fallback_answer: str = "AI service is temporarily unavailable. Please try again later."
     default_rate_limit_per_minute: int = 60
+    uploads_dir: str = "/app/uploads"
+    max_upload_size_mb: int = 50
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

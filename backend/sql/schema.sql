@@ -61,3 +61,18 @@ CREATE TABLE IF NOT EXISTS usage_logs (
     metadata_json TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS knowledge_documents (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER NOT NULL REFERENCES tenants(id),
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    filename VARCHAR(255) NOT NULL,
+    file_size INTEGER NOT NULL,
+    content_type VARCHAR(100),
+    storage_path VARCHAR(500) NOT NULL,
+    dify_document_id VARCHAR(255),
+    status VARCHAR(50) NOT NULL DEFAULT 'uploaded',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_knowledge_documents_tenant_id ON knowledge_documents (tenant_id);

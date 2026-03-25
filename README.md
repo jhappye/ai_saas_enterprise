@@ -62,6 +62,7 @@
 - `orders`
 - `api_keys`
 - `usage_logs`
+- `knowledge_documents`
 
 ## 5. Stripe 接入代码
 
@@ -90,6 +91,7 @@ stripe listen --forward-to localhost:8000/api/v1/billing/webhook
 
 位置：
 - `backend/app/services/dify_service.py`
+- `backend/app/api/v1/routes_knowledge.py`（多租户文档上传/列表/删除）
 
 实现内容：
 - 多租户透传 `tenant_id`
@@ -173,5 +175,5 @@ docker compose up --build -d
 
 - 接入支付宝国际版或本地支付网关。
 - 增加邮件验证码、邀请成员、审计日志。
-- 增加对象存储上传、知识库同步任务和异步队列。
+- 已内置本地文件存储版的多租户知识库上传能力；建议进一步替换为对象存储并接入异步任务队列。
 - 为管理后台接入真实 API 数据而非静态展示。

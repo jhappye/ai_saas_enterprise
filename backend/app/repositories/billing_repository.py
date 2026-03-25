@@ -1,6 +1,6 @@
 from sqlalchemy import func, select
 
-from app.models.models import Order, Subscription, UsageLog, User
+from app.models.models import KnowledgeDocument, Order, Subscription, UsageLog, User
 from app.repositories.base import BaseRepository
 
 
@@ -33,11 +33,16 @@ class BillingRepository(BaseRepository):
     def dashboard_summary(self, tenant_id: int):
         total_users = self.db.scalar(select(func.count()).select_from(User).where(User.tenant_id == tenant_id))
         total_orders = self.db.scalar(select(func.count()).select_from(Order).where(Order.tenant_id == tenant_id))
+        total_documents = self.db.scalar(select(func.count()).select_from(KnowledgeDocument).where(KnowledgeDocument.tenant_id == tenant_id))
+        total_chats = self.db.scalar(select(func.count()).select_from(UsageLog).where(UsageLog.tenant_id == tenant_id, UsageLog.feature == "chat"))
         revenue = self.db.scalar(select(func.coalesce(func.sum(Order.amount), 0)).where(Order.tenant_id == tenant_id, Order.status.in_(["paid", "active", "pending"])))
         subscription = self.db.scalar(select(Subscription).where(Subscription.tenant_id == tenant_id))
         return {
             "total_users": int(total_users or 0),
             "total_orders": int(total_orders or 0),
             "total_revenue": float(revenue or 0),
+            "total_documents": int(total_documents or 0),
+            "total_chats": int(total_chats or 0),
+            "avg_response_ms": 0,
             "active_subscription": subscription.plan_code if subscription and subscription.status == "active" else None,
         }

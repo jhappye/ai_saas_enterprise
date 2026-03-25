@@ -29,6 +29,8 @@ services:
     build: ./backend
     env_file:
       - ./backend/.env.example
+    volumes:
+      - backend_uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -64,3 +66,5 @@ services:
 volumes:
   postgres_data:
   redis_data:
+
+  backend_uploads:
